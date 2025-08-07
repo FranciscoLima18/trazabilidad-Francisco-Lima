@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, resource, OnInit, computed, signal, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  resource,
+  OnInit,
+  computed,
+  signal,
+  OnDestroy,
+  Input,
+  input,
+} from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import {
@@ -33,12 +43,18 @@ import {
   mapOutline,
   filterOutline,
   pawOutline,
+  calendarOutline,
+  pulseOutline,
 } from 'ionicons/icons';
 import { Animal } from 'src/app/model/animal';
 import { AnimalService } from 'src/app/services/animal.service';
 import { RolePermissionService } from 'src/app/services/role-permission.service';
-import { AnimalFiltersComponent, FilterValues } from '../../components/animal-filters/animal-filters.component';
+import {
+  AnimalFiltersComponent,
+  FilterValues,
+} from '../../components/animal-filters/animal-filters.component';
 import { WebSocketService } from 'src/app/services/websocket.service';
+import { LandsService } from 'src/app/services/lands.service';
 
 @Component({
   selector: 'app-animal-list',
@@ -72,7 +88,6 @@ import { WebSocketService } from 'src/app/services/websocket.service';
   ],
 })
 export class ListPage implements OnInit, OnDestroy {
-  
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private animalService = inject(AnimalService);
@@ -87,49 +102,51 @@ export class ListPage implements OnInit, OnDestroy {
   // Websocket connection
   private wsService = inject(WebSocketService);
   private unsubscribe: (() => void) | null = null;
-  
+
   // Filter signals
   speciesFilter = signal<string | null>(null);
   regionFilter = signal<string | null>(null);
   fromDate = signal<string | null>(null);
   toDate = signal<string | null>(null);
-  
+
   // Computed filtered animals
   filteredAnimals = computed(() => {
-    return this.animals().filter(animal => {
+    return this.animals().filter((animal) => {
       // Apply species filter if selected (using breed field)
       if (this.speciesFilter() && animal.breed !== this.speciesFilter()) {
         return false;
       }
-      
-      // Apply region filter if selected
-      // TODO: Implement region filtering when land data is available in animals
+
       if (this.regionFilter()) {
-        // For now, region filter doesn't apply since we don't have region data in animals
-        // This will be implemented when we have access to animal's current land location
       }
-      
+
       // Apply date range filter if selected
       if (this.fromDate() && this.toDate()) {
         const animalDate = new Date(animal.birth_date);
         const fromDate = new Date(this.fromDate()!);
         const toDate = new Date(this.toDate()!);
-        
+
         if (animalDate < fromDate || animalDate > toDate) {
           return false;
         }
       }
-      
+
       return true;
     });
   });
-  
+
   loading = signal<boolean>(false);
 
   // Role-based computed properties
-  readonly permissions = computed(() => this.rolePermissionService.permissions());
-  readonly canCreateAnimals = computed(() => this.permissions().canCreateAnimals);
+  readonly permissions = computed(() =>
+    this.rolePermissionService.permissions()
+  );
+  readonly canCreateAnimals = computed(
+    () => this.permissions().canCreateAnimals
+  );
   readonly canEditAnimals = computed(() => this.permissions().canEditAnimals);
+
+  public landId = input.required<string>();
 
   constructor() {
     addIcons({
@@ -140,6 +157,8 @@ export class ListPage implements OnInit, OnDestroy {
       mapOutline,
       filterOutline,
       pawOutline,
+      calendarOutline,
+      pulseOutline,
     });
   }
 
@@ -164,58 +183,67 @@ export class ListPage implements OnInit, OnDestroy {
 
   loadInitialData() {
     this.loading.set(true);
-    
+
     // Load animals
-    this.animalService.getAllAnimals().then(data => {
-      this.animals.set(data);
-      this.loading.set(false);
-    }).catch(err => {
-      console.error('Error loading animals:', err);
-      this.loading.set(false);
-    });
-    
+    this.animalService
+      .getAllAnimals()
+      .then((data) => {
+        this.animals.set(data);
+        this.loading.set(false);
+      })
+      .catch((err) => {
+        console.error('Error loading animals:', err);
+        this.loading.set(false);
+      });
+
     // Load species list
-    this.animalService.getSpeciesList().then(data => {
-      this.speciesList.set(data);
-    }).catch(err => {
-      console.error('Error loading species:', err);
-    });
-    
+    this.animalService
+      .getSpeciesList()
+      .then((data) => {
+        this.speciesList.set(data);
+      })
+      .catch((err) => {
+        console.error('Error loading species:', err);
+      });
+
     // Load regions list
-    this.animalService.getRegions().then(data => {
-      this.regionsList.set(data);
-    }).catch(err => {
-      console.error('Error loading regions:', err);
-    });
+    this.animalService
+      .getRegions()
+      .then((data) => {
+        this.regionsList.set(data);
+      })
+      .catch((err) => {
+        console.error('Error loading regions:', err);
+      });
   }
 
   readQueryParams() {
     const queryParams = this.activatedRoute.snapshot.queryParamMap;
-    
+
     if (queryParams.has('species')) {
       this.speciesFilter.set(queryParams.get('species'));
     }
-    
+
     if (queryParams.has('region')) {
       this.regionFilter.set(queryParams.get('region'));
     }
-    
+
     if (queryParams.has('from')) {
       this.fromDate.set(queryParams.get('from'));
     }
-    
+
     if (queryParams.has('to')) {
       this.toDate.set(queryParams.get('to'));
     }
   }
-  
+
   onFiltersApplied(filters: FilterValues) {
     // Update filter signals
     this.speciesFilter.set(filters.species);
     this.regionFilter.set(filters.region);
     this.fromDate.set(filters.from);
     this.toDate.set(filters.to);
-    
+
     // Update URL query params
     this.router.navigate([], {
       relativeTo: this.activatedRoute,
@@ -223,23 +251,23 @@ export class ListPage implements OnInit, OnDestroy {
         species: filters.species || null,
         region: filters.region || null,
         from: filters.from || null,
-        to: filters.to || null
+        to: filters.to || null,
       },
-      queryParamsHandling: 'merge'
+      queryParamsHandling: 'merge',
     });
   }
-  
+
   onFiltersCleared() {
     // Reset all filter signals
     this.speciesFilter.set(null);
     this.regionFilter.set(null);
     this.fromDate.set(null);
     this.toDate.set(null);
-    
+
     // Clear query params
     this.router.navigate([], {
       relativeTo: this.activatedRoute,
-      queryParams: {}
+      queryParams: {},
     });
   }
 
@@ -271,7 +299,7 @@ export class ListPage implements OnInit, OnDestroy {
     if (this.regionFilter()) queryParams.region = this.regionFilter();
     if (this.fromDate()) queryParams.from = this.fromDate();
     if (this.toDate()) queryParams.to = this.toDate();
-    
+
     this.router.navigate(['/animal/map'], { queryParams });
   }
 

@@ -23,29 +23,68 @@ import { UserService } from 'src/app/services/user.service';
     IonContent,
     IonButtons,
     IonBackButton,
-    UserFormComponent
+    UserFormComponent,
   ],
 })
 export class RegisterPage {
   loading = signal(false);
+  backendErrors = signal<any>(null);
 
- private userService = inject(UserService);
+  private userService = inject(UserService);
   private router = inject(Router);
 
-  async onSubmit(data: { email: string; password: string; repeatPassword?: string; role_id: number }) {
+  async onSubmit(data: {
+    email: string;
+    password: string;
+    repeatPassword?: string;
+    role_id: number;
+  }) {
+    // Limpiar errores anteriores
+    this.backendErrors.set(null);
+    this.loading.set(true);
+
     const user: any = {
       email: data.email,
       password: data.password,
-      role_id: data.role_id
+      role_id: data.role_id,
     };
     if (data.repeatPassword) {
       user.repeatPassword = data.repeatPassword;
     }
+
     try {
       const usuarioCreado = await this.userService.postUser(user);
       this.router.navigate(['/auth/login']);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al crear el usuario:', error);
+
+      // Procesar diferentes tipos de errores del backend
+      if (error.error) {
+        // Si el error viene con estructura específica
+        if (error.error.errors) {
+          // Errores de validación específicos por campo
+          this.backendErrors.set(error.error.errors);
+        } else if (error.error.message) {
+          // Mensaje de error general
+          this.backendErrors.set(error.error.message);
+        } else if (typeof error.error === 'string') {
+          // Error como string
+          this.backendErrors.set(error.error);
+        } else {
+          // Error genérico
+          this.backendErrors.set(
+            'Error al crear el usuario. Intenta nuevamente.'
+          );
+        }
+      } else if (error.message) {
+        this.backendErrors.set(error.message);
+      } else {
+        this.backendErrors.set(
+          'Error al crear el usuario. Intenta nuevamente.'
+        );
+      }
+    } finally {
+      this.loading.set(false);
     }
   }
   goToLogin() {

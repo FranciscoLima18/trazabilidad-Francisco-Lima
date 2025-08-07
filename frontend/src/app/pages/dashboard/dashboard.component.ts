@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed } from '@angular/core';
+import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import {
@@ -12,6 +12,11 @@ import {
   IonCardContent,
   IonIcon,
   IonBadge,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonText,
+  IonSpinner,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -21,9 +26,14 @@ import {
   pricetagOutline,
   statsChartOutline,
   documentTextOutline,
+  eyeOutline,
+  calendarOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { MainStoreService } from 'src/app/services/main-store.service';
 import { RolePermissionService } from 'src/app/services/role-permission.service';
+import { AnimalService } from 'src/app/services/animal.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,6 +41,7 @@ import { RolePermissionService } from 'src/app/services/role-permission.service'
   styleUrls: ['./dashboard.component.scss'],
   standalone: true,
   imports: [
+    CommonModule,
     RouterLink,
     IonContent,
     IonGrid,
@@ -42,6 +53,12 @@ import { RolePermissionService } from 'src/app/services/role-permission.service'
     IonCardContent,
     IonIcon,
     IonBadge,
+    IonButton,
+    IonItem,
+    IonLabel,
+    IonText,
+    IonSpinner,
+    IonRow,
   ],
 })
 export class DashboardComponent implements OnInit {
@@ -54,7 +71,9 @@ export class DashboardComponent implements OnInit {
   readonly isAdmin = computed(() => this.mainStore.isAdmin());
   readonly canEditAnimals = computed(() => this.mainStore.isOperatorOrAdmin());
   readonly isConsulta = computed(() => this.mainStore.userRoleId() === 2);
-  readonly permissions = computed(() => this.rolePermissionService.permissions());
+  readonly permissions = computed(() =>
+    this.rolePermissionService.permissions()
+  );
   readonly roleName = computed(() => this.rolePermissionService.getRoleName());
   readonly userId = computed(() => this.mainStore.userId());
   userIdValue = this.userId();
@@ -67,6 +86,9 @@ export class DashboardComponent implements OnInit {
       pricetagOutline,
       statsChartOutline,
       documentTextOutline,
+      eyeOutline,
+      calendarOutline,
+      timeOutline,
     });
   }
 

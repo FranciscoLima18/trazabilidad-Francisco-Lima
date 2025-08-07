@@ -40,6 +40,20 @@ export const routes: Routes = [
           ),
       },
 
+      {
+        path: 'lastThree',
+        canActivate: [userGuard],
+        data: {
+          menu: true,
+          section: 'Animales',
+          title: 'Ultimos tres Animales creados.',
+        },
+        loadComponent: () =>
+          import('./pages/last3-animals/last3-animals.page').then(
+            (m) => m.Last3AnimalsPage
+          ),
+      },
+
       // 3. Rutas con sub-segmentos dinámicos
       {
         path: 'edit/:id',

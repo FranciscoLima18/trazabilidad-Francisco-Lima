@@ -10,17 +10,17 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  IonGrid,
-  IonRow,
-  IonCol,
   IonInput,
   IonButton,
   IonSelect,
   IonSelectOption,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonSpinner,
 } from '@ionic/angular/standalone';
-import { FieldErrorPipe } from 'src/app/pipes/field-error.pipe';
 import { MainStoreService } from 'src/app/services/main-store.service';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-user-form',
@@ -28,16 +28,18 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
   templateUrl: './user-form.component.html',
   imports: [
     CommonModule,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonInput,
-    IonButton,
-    IonSelect,
-    IonSelectOption,
-    FieldErrorPipe,
     FormsModule,
-    ReactiveFormsModule,
+    //IonRow,
+    //IonCol,
+    IonButton,
+    //IonGrid,
+    IonInput,
+    IonItem,
+    IonIcon,
+    IonLabel,
+    IonSelectOption,
+    IonSelect,
+    IonSpinner,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-user-form' },
@@ -46,6 +48,8 @@ export default class UserFormComponent {
   //inputs
   user = input<any | null>(null);
   isEditMode = input<boolean>(false);
+  error = signal<string>('');
+  backendErrors = input<any>(null);
 
   //outputs
   submitted = output<any>();
@@ -67,8 +71,34 @@ export default class UserFormComponent {
 
   loading = signal(false);
 
+  // Computed para obtener errores específicos de campos
+  fieldErrors = computed(() => {
+    const errors = this.backendErrors();
+    if (!errors) return {};
+
+    if (typeof errors === 'object' && !Array.isArray(errors)) {
+      return errors;
+    }
+
+    return {};
+  });
+
+  generalError = computed(() => {
+    const errors = this.backendErrors();
+    if (!errors) return '';
+
+    if (typeof errors === 'string') {
+      return errors;
+    }
+
+    if (typeof errors === 'object' && errors.message) {
+      return errors.message;
+    }
+
+    return '';
+  });
+
   constructor() {
-    // Reactivar con un effect el cambio de usuario
     effect(() => {
       const u = this.user();
       if (u) {
@@ -103,22 +133,53 @@ export default class UserFormComponent {
   onEmailChange(value: string | number | null | undefined) {
     this.email.set(typeof value === 'string' ? value : String(value ?? ''));
     this.touched.set({ ...this.touched(), email: true });
+    // Limpiar error específico de este campo
+    this.clearFieldError('email');
   }
   onPasswordChange(value: string | number | null | undefined) {
     this.password.set(typeof value === 'string' ? value : String(value ?? ''));
     this.touched.set({ ...this.touched(), password: true });
+    // Limpiar error específico de este campo
+    this.clearFieldError('password');
   }
   onRepeatPasswordChange(value: string | number | null | undefined) {
     this.repeatPassword.set(
       typeof value === 'string' ? value : String(value ?? '')
     );
     this.touched.set({ ...this.touched(), repeatPassword: true });
+    // Limpiar error específico de este campo
+    this.clearFieldError('repeatPassword');
+    this.clearFieldError('confirmPassword');
   }
   onRoleChange(value: number | string | null | undefined) {
     // Siempre casteamos a number si es string o null
     const roleValue = typeof value === 'number' ? value : Number(value ?? 0);
     this.role_id.set(roleValue);
     this.touched.set({ ...this.touched(), role: true });
+    // Limpiar error específico de este campo
+    this.clearFieldError('role_id');
+    this.clearFieldError('role');
+  }
+
+  // Método para limpiar error específico de un campo
+  clearFieldError(fieldName: string): void {
+    const currentErrors = this.backendErrors();
+    if (
+      currentErrors &&
+      typeof currentErrors === 'object' &&
+      !Array.isArray(currentErrors)
+    ) {
+      const newErrors = { ...currentErrors };
+      delete newErrors[fieldName];
+
+      if (Object.keys(newErrors).length === 0) {
+      }
+    }
+  }
+
+  getFieldError(fieldName: string): string {
+    const errors = this.fieldErrors();
+    return errors[fieldName] || '';
   }
 
   async onSubmit() {

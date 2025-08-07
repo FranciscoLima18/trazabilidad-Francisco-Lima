@@ -11,6 +11,7 @@
   <app-user-form
     [isEditMode]="false"
     [user]="null"
+    [backendErrors]="backendErrors()"
     (submitted)="onSubmit($event)"
     (canceled)="goToLogin()"
   ></app-user-form>

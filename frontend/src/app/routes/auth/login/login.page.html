@@ -20,17 +20,24 @@
 
       <div class="form-group">
         <ion-item lines="none" class="form-item">
-          <ion-label position="stacked" color="medium">Correo Electrónico</ion-label>
-          <ion-input 
-            type="email" 
-            [ngModel]="email()" 
-            (ngModelChange)="email.set($event)" 
+          <ion-label position="stacked" color="medium"
+            >Correo Electrónico</ion-label
+          >
+          <ion-input
+            type="email"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
             placeholder="usuario@ejemplo.com"
-            name="email" 
+            name="email"
             required
             fill="outline"
-            class="custom-input">
-            <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
+            class="custom-input"
+          >
+            <ion-icon
+              name="mail-outline"
+              slot="start"
+              color="medium"
+            ></ion-icon>
           </ion-input>
         </ion-item>
       </div>
@@ -38,34 +45,38 @@
       <div class="form-group">
         <ion-item lines="none" class="form-item">
           <ion-label position="stacked" color="medium">Contraseña</ion-label>
-          <ion-input 
-            type="password" 
-            [ngModel]="password()" 
+          <ion-input
+            type="password"
+            [ngModel]="password()"
             (ngModelChange)="password.set($event)"
-            placeholder="Ingresa tu contraseña" 
-            name="password" 
+            placeholder="Ingresa tu contraseña"
+            name="password"
             required
             fill="outline"
-            class="custom-input">
-            <ion-icon name="lock-closed-outline" slot="start" color="medium"></ion-icon>
+            class="custom-input"
+          >
+            <ion-icon
+              name="lock-closed-outline"
+              slot="start"
+              color="medium"
+            ></ion-icon>
           </ion-input>
         </ion-item>
       </div>
 
-      <ion-button 
-        expand="block" 
-        type="submit" 
-        [disabled]="loading()" 
+      <ion-button
+        expand="block"
+        type="submit"
+        [disabled]="loading()"
         class="login-button"
         shape="round"
-        size="large">
-        @if (loading()) { 
-          <ion-spinner name="crescent" slot="start"></ion-spinner>
-          Iniciando sesión... 
-        } @else { 
-          <ion-icon name="log-in-outline" slot="start"></ion-icon>
-          Iniciar Sesión 
-        }
+        size="large"
+      >
+        @if (loading()) {
+        <ion-spinner name="crescent" slot="start"></ion-spinner>
+        Iniciando sesión... } @else {
+        <ion-icon name="log-in-outline" slot="start"></ion-icon>
+        Iniciar Sesión }
       </ion-button>
     </form>
 
